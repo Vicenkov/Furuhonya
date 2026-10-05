@@ -365,3 +365,27 @@ body::before {
     animation-iteration-count: 1 !important;
   }
 }
+/* ---------- Message Composer ---------- */
+
+.composer-textarea {
+  scrollbar-width: thin;
+}
+
+.composer-textarea::-webkit-scrollbar {
+  width: 6px;
+}
+
+.composer-textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.composer-textarea::-webkit-scrollbar-thumb {
+  background: var(--glass-border);
+  border-radius: 999px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .composer-textarea {
+    scroll-behavior: auto;
+  }
+}
