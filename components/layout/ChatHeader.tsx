@@ -2,12 +2,14 @@ import { Menu, PanelLeft, Sparkles } from "lucide-react";
 import { GlassButton } from "@/components/ui/GlassButton";
 
 type ChatHeaderProps = {
+  title: string;
   sidebarCollapsed: boolean;
   onToggleSidebar: () => void;
   onOpenDrawer: () => void;
 };
 
 export function ChatHeader({
+  title,
   sidebarCollapsed,
   onToggleSidebar,
   onOpenDrawer,
@@ -36,7 +38,7 @@ export function ChatHeader({
           <PanelLeft size={20} />
         </GlassButton>
 
-        <h1 className="min-w-0 flex-1 truncate text-sm font-medium">New chat</h1>
+        <h1 className="min-w-0 flex-1 truncate text-sm font-medium">{title}</h1>
 
         {/* Tên model đang để tạm, Phase 7 và 11 sẽ lấy từ cấu hình thật */}
         <div className="glass inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs text-fg-muted">

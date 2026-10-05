@@ -135,3 +135,233 @@ body::before {
     transition-duration: 0.01ms !important;
   }
 }
+/* Nút phụ chỉ hiện khi rê chuột (thiết bị có chuột). Thiết bị cảm ứng luôn hiện. */
+@media (hover: hover) {
+  .reveal-on-hover {
+    opacity: 0;
+    transition: opacity 150ms ease-out;
+  }
+  .group:hover .reveal-on-hover,
+  .group:focus-within .reveal-on-hover {
+    opacity: 1;
+  }
+}
+/* ---------- Màu cho code (sáng / tối) ---------- */
+:root {
+  --code-bg: rgba(15, 23, 42, 0.05);
+  --tok-keyword: #7c3aed;
+  --tok-string: #047857;
+  --tok-number: #b45309;
+  --tok-comment: #6b7280;
+  --tok-title: #1d4ed8;
+  --tok-attr: #be123c;
+  --tok-builtin: #0e7490;
+}
+.dark {
+  --code-bg: rgba(255, 255, 255, 0.06);
+  --tok-keyword: #c4b5fd;
+  --tok-string: #86efac;
+  --tok-number: #fcd34d;
+  --tok-comment: #9ca3af;
+  --tok-title: #93c5fd;
+  --tok-attr: #fda4af;
+  --tok-builtin: #67e8f9;
+}
+
+/* Tô màu cú pháp (class do rehype-highlight sinh ra) */
+.hljs {
+  background: transparent;
+  color: inherit;
+}
+.hljs-keyword,
+.hljs-literal,
+.hljs-doctag,
+.hljs-selector-tag {
+  color: var(--tok-keyword);
+}
+.hljs-string,
+.hljs-regexp,
+.hljs-addition {
+  color: var(--tok-string);
+}
+.hljs-number,
+.hljs-symbol,
+.hljs-bullet {
+  color: var(--tok-number);
+}
+.hljs-comment,
+.hljs-quote {
+  color: var(--tok-comment);
+  font-style: italic;
+}
+.hljs-title,
+.hljs-section,
+.hljs-selector-id,
+.hljs-selector-class {
+  color: var(--tok-title);
+}
+.hljs-attr,
+.hljs-attribute,
+.hljs-variable,
+.hljs-property,
+.hljs-name,
+.hljs-deletion {
+  color: var(--tok-attr);
+}
+.hljs-built_in,
+.hljs-type,
+.hljs-meta,
+.hljs-tag {
+  color: var(--tok-builtin);
+}
+
+/* ---------- Markdown trong tin nhắn ---------- */
+.markdown {
+  font-size: 15px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.markdown > :first-child {
+  margin-top: 0;
+}
+.markdown > :last-child {
+  margin-bottom: 0;
+}
+.markdown p {
+  margin: 0.75em 0;
+}
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4 {
+  margin: 1.4em 0 0.5em;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+.markdown h1 {
+  font-size: 1.5em;
+}
+.markdown h2 {
+  font-size: 1.25em;
+}
+.markdown h3 {
+  font-size: 1.1em;
+}
+.markdown ul,
+.markdown ol {
+  margin: 0.75em 0;
+  padding-left: 1.5em;
+}
+.markdown ul {
+  list-style: disc;
+}
+.markdown ol {
+  list-style: decimal;
+}
+.markdown li {
+  margin: 0.3em 0;
+}
+.markdown li::marker {
+  color: var(--fg-muted);
+}
+.markdown a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.markdown blockquote {
+  margin: 1em 0;
+  padding-left: 1em;
+  border-left: 3px solid var(--glass-border);
+  color: var(--fg-muted);
+}
+.markdown hr {
+  margin: 1.5em 0;
+  border: 0;
+  border-top: 1px solid var(--glass-border);
+}
+.markdown :not(pre) > code {
+  padding: 0.15em 0.4em;
+  border-radius: 6px;
+  background: var(--code-bg);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+}
+.markdown .table-wrap {
+  margin: 1em 0;
+  overflow-x: auto;
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+}
+.markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.93em;
+}
+.markdown th,
+.markdown td {
+  padding: 0.55em 0.9em;
+  text-align: left;
+  border-bottom: 1px solid var(--glass-border);
+}
+.markdown th {
+  background: var(--code-bg);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.markdown tr:last-child td {
+  border-bottom: 0;
+}
+
+/* ---------- Con trỏ nhấp nháy khi AI đang trả lời ---------- */
+@keyframes cursor-blink {
+  50% {
+    opacity: 0;
+  }
+}
+.markdown.is-streaming > :is(p, h1, h2, h3, h4, blockquote):last-child::after,
+.markdown.is-streaming > :is(ul, ol):last-child > li:last-child::after {
+  content: "";
+  display: inline-block;
+  width: 0.5em;
+  height: 1.05em;
+  margin-left: 3px;
+  vertical-align: text-bottom;
+  border-radius: 2px;
+  background: var(--accent);
+  animation: cursor-blink 1s steps(1) infinite;
+}
+
+/* ---------- Typing indicator ---------- */
+@keyframes typing-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+.typing-dot {
+  animation: typing-dot 1.2s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.typing-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+/* Sửa lỗi ở Phase 2: khi người dùng bật "giảm chuyển động", animation lặp vô hạn
+   phải chạy đúng 1 lần, nếu không nó nhấp nháy cực nhanh thay vì đứng yên. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-iteration-count: 1 !important;
+  }
+}

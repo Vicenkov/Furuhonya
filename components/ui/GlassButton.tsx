@@ -3,7 +3,7 @@
 import { motion, type HTMLMotionProps } from "motion/react";
 import { cn } from "@/lib/utils/cn";
 
-type Variant = "glass" | "accent" | "ghost";
+type Variant = "glass" | "accent" | "ghost" | "danger";
 
 type GlassButtonProps = HTMLMotionProps<"button"> & {
   variant?: Variant;
@@ -14,6 +14,7 @@ const variants: Record<Variant, string> = {
   accent:
     "bg-accent text-accent-fg shadow-[0_6px_20px_-6px_var(--accent)]",
   ghost: "text-fg-muted hover:bg-[var(--glass-bg)] hover:text-fg",
+  danger: "bg-red-600 text-white",
 };
 
 export function GlassButton({
