@@ -1,13 +1,12 @@
 "use client";
 
 import { memo } from "react";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { Check, Copy } from "lucide-react";
-import { AssistantAvatar } from "@/components/chat/AssistantAvatar";
 import { MarkdownContent } from "@/components/chat/MarkdownContent";
-import { GlassButton } from "@/components/ui/GlassButton";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { cn } from "@/lib/utils/cn";
+import { useAppSettings } from "@/hooks/useAppSettings";
 import type { Message } from "@/types/chat";
 
 type MessageBubbleProps = {
@@ -16,23 +15,34 @@ type MessageBubbleProps = {
 };
 
 function MessageBubbleBase({ message, isStreaming = false }: MessageBubbleProps) {
-  const { copied, copy } = useCopyToClipboard();
+  const { copied, copy } = useCopyToClipboard(1500);
+  const { settings } = useAppSettings();
+  const reduceMotion = useReducedMotion();
   const isUser = message.role === "user";
+  const label = isUser
+    ? settings.language === "vi" ? "BẠN" : "YOU"
+    : "FURUHONYA";
+  const time = new Intl.DateTimeFormat(settings.language === "vi" ? "vi-VN" : "en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(message.createdAt);
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 8 }}
+      initial={reduceMotion ? false : { opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
-      aria-label={isUser ? "You" : "Assistant"}
-      className={cn("group flex gap-3", isUser ? "justify-end" : "justify-start")}
+      transition={{ duration: 0.22, ease: [0.2, 0.7, 0.2, 1] }}
+      aria-label={isUser ? "You" : "Furuhonya"}
+      className={cn("message-row group grid grid-cols-[120px_minmax(0,1fr)] gap-6 py-6", !isUser && message.content.length > 200 && "has-dropcap")}
     >
-      {!isUser && <AssistantAvatar />}
+      <div className="flex flex-col gap-1 pt-1">
+        <span className="label-mono text-ink">{label}</span>
+        <time className="label-mono text-fg-muted">{time}</time>
+      </div>
 
-      <div className={cn("min-w-0", isUser ? "max-w-[85%]" : "flex-1")}>
+      <div className="min-w-0 max-w-[68ch]">
         {isUser ? (
-          // Tin nhắn người dùng hiển thị như chữ thuần, không phân tích Markdown
-          <div className="rounded-[22px] rounded-br-lg bg-accent px-4 py-2.5 text-[15px] leading-relaxed break-words whitespace-pre-wrap text-accent-fg">
+          <div className="border-l-2 border-accent pl-4 font-body italic text-[length:var(--chat-font-size)] leading-[1.75] break-words whitespace-pre-wrap text-ink">
             {message.content}
           </div>
         ) : (
@@ -40,15 +50,20 @@ function MessageBubbleBase({ message, isStreaming = false }: MessageBubbleProps)
         )}
 
         {!isStreaming && message.content && (
-          <div className={cn("mt-1 flex", isUser && "justify-end")}>
-            <GlassButton
-              variant="ghost"
-              aria-label={copied ? "Message copied" : "Copy message"}
+          <div className="message-actions mt-2 flex">
+            <button
+              type="button"
+              aria-label={copied
+                ? settings.language === "vi" ? "Đã sao chép nội dung" : "Message copied"
+                : settings.language === "vi" ? "Sao chép nội dung" : "Copy message"}
               onClick={() => void copy(message.content)}
-              className="reveal-on-hover h-8 w-8 rounded-[10px] px-0"
+              className="label-mono inline-flex min-h-10 items-center gap-2 px-2 text-fg-muted hover:text-ink"
             >
-              {copied ? <Check size={15} /> : <Copy size={15} />}
-            </GlassButton>
+              {copied ? <Check size={14} /> : <Copy size={14} />}
+              {copied
+                ? settings.language === "vi" ? "ĐÃ CHÉP ✓" : "COPIED ✓"
+                : settings.language === "vi" ? "SAO CHÉP" : "COPY"}
+            </button>
           </div>
         )}
       </div>
@@ -56,5 +71,4 @@ function MessageBubbleBase({ message, isStreaming = false }: MessageBubbleProps)
   );
 }
 
-// memo: khi AI đang trả lời, chỉ tin nhắn cuối render lại, các tin cũ thì không.
 export const MessageBubble = memo(MessageBubbleBase);

@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowDown } from "lucide-react";
+import { ErrorNotice } from "@/components/chat/ErrorNotice";
 import { MessageBubble } from "@/components/chat/MessageBubble";
 import { TypingIndicator } from "@/components/chat/TypingIndicator";
 import { GlassButton } from "@/components/ui/GlassButton";
@@ -14,9 +15,12 @@ const NEAR_BOTTOM_PX = 80;
 type MessageListProps = {
   messages: Message[];
   status: ChatStatus;
+  error: string | null;
+  onRetry: () => void;
 };
 
-export function MessageList({ messages, status }: MessageListProps) {
+export function MessageList({ messages, status, error, onRetry }: MessageListProps) {
+  const reduceMotion = useReducedMotion();
   const scrollRef = useRef<HTMLDivElement>(null);
   const followBottomRef = useRef(true);
   const lastUserMessageIdRef = useRef<string | null>(null);
@@ -49,7 +53,7 @@ export function MessageList({ messages, status }: MessageListProps) {
     }
 
     if (followBottomRef.current) scrollToBottom("auto");
-  }, [messages, status, scrollToBottom]);
+  }, [messages, status, error, scrollToBottom]);
 
   const handleScrollButtonClick = () => {
     followBottomRef.current = true;
@@ -71,7 +75,7 @@ export function MessageList({ messages, status }: MessageListProps) {
         aria-live="off"
         className="h-full overflow-y-auto overscroll-contain"
       >
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6">
+        <div className="mx-auto flex w-full max-w-[980px] flex-col px-5 py-2 sm:px-8 lg:px-12">
           {messages.map((message) => (
             <MessageBubble
               key={message.id}
@@ -80,6 +84,7 @@ export function MessageList({ messages, status }: MessageListProps) {
             />
           ))}
           {status === "waiting" && <TypingIndicator />}
+          {error && <ErrorNotice message={error} onRetry={onRetry} />}
         </div>
       </div>
 
@@ -87,16 +92,16 @@ export function MessageList({ messages, status }: MessageListProps) {
         <AnimatePresence>
           {showScrollButton && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 6 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 6 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
+              initial={reduceMotion ? false : { opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduceMotion ? undefined : { opacity: 0, y: 6 }}
+              transition={{ duration: reduceMotion ? 0 : 0.15, ease: [0.2, 0.7, 0.2, 1] }}
               className="pointer-events-auto"
             >
               <GlassButton
                 aria-label="Scroll to bottom"
                 onClick={handleScrollButtonClick}
-                className="h-10 w-10 rounded-full px-0"
+                className="h-11 w-11 px-0"
               >
                 <ArrowDown size={18} />
               </GlassButton>

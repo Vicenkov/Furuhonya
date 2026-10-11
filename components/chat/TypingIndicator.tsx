@@ -1,23 +1,32 @@
 "use client";
 
-import { motion } from "motion/react";
-import { AssistantAvatar } from "@/components/chat/AssistantAvatar";
+import { motion, useReducedMotion } from "motion/react";
+import { useAppSettings } from "@/hooks/useAppSettings";
 
 export function TypingIndicator() {
+  const { settings } = useAppSettings();
+  const reduceMotion = useReducedMotion();
   return (
     <motion.div
       role="status"
-      aria-label="Assistant is typing"
-      initial={{ opacity: 0, y: 8 }}
+      aria-label="Furuhonya is writing"
+      initial={reduceMotion ? false : { opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
-      className="flex items-center gap-3"
+      transition={{ duration: reduceMotion ? 0 : 0.22, ease: [0.2, 0.7, 0.2, 1] }}
+      className="message-row grid grid-cols-[120px_minmax(0,1fr)] gap-6 border-t border-line py-6"
     >
-      <AssistantAvatar />
-      <div className="glass flex h-9 items-center gap-1.5 rounded-full px-4">
-        <span className="typing-dot h-1.5 w-1.5 rounded-full bg-fg-muted" />
-        <span className="typing-dot h-1.5 w-1.5 rounded-full bg-fg-muted" />
-        <span className="typing-dot h-1.5 w-1.5 rounded-full bg-fg-muted" />
+      <div className="flex flex-col gap-1 pt-1">
+        <span className="label-mono text-ink">FURUHONYA</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="label-mono text-fg-muted">
+          {settings.language === "vi" ? "ĐANG VIẾT" : "WRITING"}
+        </span>
+        <span className="writing-dots inline-flex gap-1" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+        </span>
       </div>
     </motion.div>
   );

@@ -1,53 +1,69 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { motion } from "motion/react";
-import { PanelLeftClose, X } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { X } from "lucide-react";
 import { ChatHeader } from "@/components/layout/ChatHeader";
 import { MobileDrawer } from "@/components/layout/MobileDrawer";
+import { SettingsDialog } from "@/components/sidebar/SettingsDialog";
 import { SidebarContent } from "@/components/sidebar/SidebarContent";
 import { GlassButton } from "@/components/ui/GlassButton";
 import { GlassModal } from "@/components/ui/GlassModal";
-import { GlassPanel } from "@/components/ui/GlassPanel";
-import { useConversations } from "@/hooks/useConversations";
+import type { Conversation } from "@/types/chat";
+import { useAppSettings } from "@/hooks/useAppSettings";
 
 const SIDEBAR_WIDTH = 288;
-const SIDEBAR_GAP = 16;
+const SIDEBAR_RAIL_WIDTH = 56;
 
 type AppShellProps = {
   children: React.ReactNode;
   composer: React.ReactNode;
+  conversations: Conversation[];
+  activeConversation: Conversation | null;
+  onSelectConversation: (id: string) => void;
+  onNewChat: () => void;
+  onRenameConversation: (id: string, title: string) => void;
+  onDeleteConversation: (id: string) => void;
 };
 
-export function AppShell({ children, composer }: AppShellProps) {
-  const {
-    conversations,
-    activeConversation,
-    selectConversation,
-    startNewChat,
-    renameConversation,
-    removeConversation,
-  } = useConversations();
-
+export function AppShell({
+  children,
+  composer,
+  conversations,
+  activeConversation,
+  onSelectConversation,
+  onNewChat,
+  onRenameConversation,
+  onDeleteConversation,
+}: AppShellProps) {
+  const { settings } = useAppSettings();
+  const reduceMotion = useReducedMotion();
+  const isVietnamese = settings.language === "vi";
   const [desktopCollapsed, setDesktopCollapsed] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [searchFocusRequest, setSearchFocusRequest] = useState(0);
 
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
 
   const handleSelect = (id: string) => {
-    selectConversation(id);
+    onSelectConversation(id);
     setDrawerOpen(false);
   };
 
   const handleNewChat = () => {
-    startNewChat();
+    onNewChat();
     setDrawerOpen(false);
   };
 
+  const handleOpenSettings = () => {
+    setDrawerOpen(false);
+    setSettingsOpen(true);
+  };
+
   const confirmDelete = () => {
-    if (deleteTargetId) removeConversation(deleteTargetId);
+    if (deleteTargetId) onDeleteConversation(deleteTargetId);
     setDeleteTargetId(null);
   };
 
@@ -55,10 +71,25 @@ export function AppShell({ children, composer }: AppShellProps) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "k") {
+        if (
+          event.key !== "/" ||
+          event.metaKey ||
+          event.ctrlKey ||
+          event.altKey ||
+          event.target instanceof HTMLElement &&
+            (event.target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(event.target.tagName))
+        ) return;
+        event.preventDefault();
+        if (window.matchMedia("(min-width: 768px)").matches) {
+          setDesktopCollapsed(false);
+        } else {
+          setDrawerOpen(true);
+        }
+        setSearchFocusRequest((count) => count + 1);
         return;
       }
       event.preventDefault();
-      if (window.matchMedia("(min-width: 1024px)").matches) {
+      if (window.matchMedia("(min-width: 768px)").matches) {
         setDesktopCollapsed(false);
       } else {
         setDrawerOpen(true);
@@ -87,42 +118,25 @@ export function AppShell({ children, composer }: AppShellProps) {
     activeId: activeConversation?.id ?? null,
     onNewChat: handleNewChat,
     onSelect: handleSelect,
-    onRename: renameConversation,
+    onRename: onRenameConversation,
     onRequestDelete: setDeleteTargetId,
+    onOpenSettings: handleOpenSettings,
   };
 
   return (
-    <div className="flex h-dvh overflow-hidden lg:p-4">
-      {/* Sidebar cho màn hình lớn */}
+    <div className="flex h-dvh overflow-hidden bg-paper">
       <motion.aside
         initial={false}
         animate={{
-          width: desktopCollapsed ? 0 : SIDEBAR_WIDTH,
-          marginRight: desktopCollapsed ? 0 : SIDEBAR_GAP,
+          width: desktopCollapsed ? SIDEBAR_RAIL_WIDTH : SIDEBAR_WIDTH,
         }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
-        inert={desktopCollapsed}
-        className="hidden shrink-0 overflow-hidden lg:block"
+        transition={{ duration: reduceMotion ? 0 : 0.15, ease: [0.2, 0.7, 0.2, 1] }}
+        className="hidden h-full shrink-0 overflow-hidden border-r border-ink md:block"
       >
-        <GlassPanel className="h-full w-72">
-          <SidebarContent
-            {...sidebarProps}
-            headerAction={
-              <GlassButton
-                variant="ghost"
-                aria-label="Collapse sidebar"
-                onClick={() => setDesktopCollapsed(true)}
-                className="h-9 w-9 px-0"
-              >
-                <PanelLeftClose size={18} />
-              </GlassButton>
-            }
-          />
-        </GlassPanel>
+        <SidebarContent {...sidebarProps} collapsed={desktopCollapsed} />
       </motion.aside>
 
-      {/* Khung chat chính: toàn màn hình trên điện thoại */}
-      <GlassPanel className="flex min-w-0 flex-1 flex-col overflow-hidden max-lg:rounded-none max-lg:border-0">
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <ChatHeader
           title={activeConversation?.title ?? "New chat"}
           sidebarCollapsed={desktopCollapsed}
@@ -130,14 +144,27 @@ export function AppShell({ children, composer }: AppShellProps) {
           onOpenDrawer={() => setDrawerOpen(true)}
         />
 
-        <div className="min-h-0 flex-1">{children}</div>
+        <div className="min-h-0 flex-1">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={activeConversation?.id ?? "new"}
+              initial={reduceMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={reduceMotion ? undefined : { opacity: 0 }}
+              transition={{ duration: reduceMotion ? 0 : 0.15 }}
+              className="h-full min-h-0"
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
+        </div>
 
-        <div className="px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6 sm:pb-4">
+        <div className="sticky bottom-0 z-10 w-full px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6 sm:pb-4">
           {composer}
         </div>
-      </GlassPanel>
+      </main>
 
-      {/* Sidebar cho điện thoại và tablet */}
+      {/* Sidebar for smaller screens */}
       <MobileDrawer open={drawerOpen} onClose={closeDrawer}>
         <SidebarContent
           {...sidebarProps}
@@ -146,7 +173,7 @@ export function AppShell({ children, composer }: AppShellProps) {
               variant="ghost"
               aria-label="Close sidebar"
               onClick={closeDrawer}
-              className="h-9 w-9 px-0"
+              className="h-11 w-11 px-0"
             >
               <X size={18} />
             </GlassButton>
@@ -154,22 +181,27 @@ export function AppShell({ children, composer }: AppShellProps) {
         />
       </MobileDrawer>
 
-      {/* Hộp thoại xác nhận xóa: đặt ở đây, ngoài các khung kính (xem lưu ý dưới) */}
+      {/* Hộp thoại xác nhận xóa */}
       <GlassModal
         open={deleteTargetId !== null}
         onClose={() => setDeleteTargetId(null)}
-        title="Delete conversation?"
+        title={isVietnamese ? "Xóa cuộc trò chuyện?" : "Delete conversation?"}
       >
         <p className="text-sm text-fg-muted">
-          This conversation will be permanently deleted. This cannot be undone.
+          {isVietnamese
+            ? "Cuộc trò chuyện sẽ bị xóa vĩnh viễn. Bạn không thể hoàn tác thao tác này."
+            : "This conversation will be permanently deleted. This cannot be undone."}
         </p>
         <div className="mt-5 flex justify-end gap-3">
-          <GlassButton onClick={() => setDeleteTargetId(null)}>Cancel</GlassButton>
+          <GlassButton onClick={() => setDeleteTargetId(null)}>
+            {isVietnamese ? "Hủy" : "Cancel"}
+          </GlassButton>
           <GlassButton variant="danger" onClick={confirmDelete}>
-            Delete
+            {isVietnamese ? "Xóa" : "Delete"}
           </GlassButton>
         </div>
       </GlassModal>
+      <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   );
 }

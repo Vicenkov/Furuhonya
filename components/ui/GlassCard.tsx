@@ -12,9 +12,9 @@ export function GlassCard({
   return (
     <div
       className={cn(
-        "glass rounded-[24px] p-5",
+        "book-card p-5",
         interactive &&
-          "glass-sheen transition-transform duration-200 ease-out hover:-translate-y-0.5",
+          "transition-transform duration-200 ease-out hover:-translate-y-0.5",
         className,
       )}
       {...props}

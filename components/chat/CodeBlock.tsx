@@ -4,6 +4,7 @@ import { isValidElement, type ReactNode } from "react";
 import { Check, Copy } from "lucide-react";
 import { GlassButton } from "@/components/ui/GlassButton";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
+import { useAppSettings } from "@/hooks/useAppSettings";
 
 // Sau khi tô màu, code là một cây phần tử lồng nhau. Hàm này gom lại thành chữ thuần để copy.
 function extractText(node: ReactNode): string {
@@ -29,7 +30,9 @@ type CodeBlockProps = {
 };
 
 export function CodeBlock({ children }: CodeBlockProps) {
-  const { copied, copy } = useCopyToClipboard();
+  const { copied, copy } = useCopyToClipboard(1500);
+  const { settings } = useAppSettings();
+  const isVietnamese = settings.language === "vi";
   const language = extractLanguage(children);
 
   const handleCopy = () => {
@@ -37,20 +40,22 @@ export function CodeBlock({ children }: CodeBlockProps) {
   };
 
   return (
-    <div className="my-4 overflow-hidden rounded-[18px] border border-[var(--glass-border)] bg-[var(--code-bg)]">
-      <div className="flex h-10 items-center justify-between border-b border-[var(--glass-border)] pr-1.5 pl-4 text-xs text-fg-muted">
-        <span className="font-mono tracking-wide uppercase">{language}</span>
+    <div className="code-frame my-4 overflow-hidden border border-line bg-[var(--code-bg)]">
+      <div className="code-frame-header flex h-10 items-center justify-between border-b border-line pr-1.5 pl-4 text-xs">
+        <span className="label-mono">{language}</span>
         <GlassButton
           variant="ghost"
           aria-label={copied ? "Code copied" : "Copy code"}
           onClick={handleCopy}
-          className="h-8 gap-1.5 rounded-[10px] px-2.5 text-xs"
+          className="label-mono h-10 gap-1.5 px-2.5"
         >
           {copied ? <Check size={14} /> : <Copy size={14} />}
-          {copied ? "Copied" : "Copy"}
+          {copied
+            ? isVietnamese ? "Đã chép ✓" : "Copied ✓"
+            : isVietnamese ? "Sao chép" : "Copy"}
         </GlassButton>
       </div>
-      <pre className="overflow-x-auto p-4 font-mono text-[13px] leading-relaxed">
+      <pre className="overflow-x-auto p-4 font-mono text-[13px] leading-relaxed text-[#FFF6EE]">
         {children}
       </pre>
     </div>

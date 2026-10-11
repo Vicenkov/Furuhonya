@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
 type MobileDrawerProps = {
   open: boolean;
@@ -10,6 +10,7 @@ type MobileDrawerProps = {
 };
 
 export function MobileDrawer({ open, onClose, children }: MobileDrawerProps) {
+  const reduceMotion = useReducedMotion();
   useEffect(() => {
     if (!open) return;
 
@@ -23,13 +24,13 @@ export function MobileDrawer({ open, onClose, children }: MobileDrawerProps) {
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-40 lg:hidden">
+        <div className="fixed inset-0 z-40 md:hidden">
           <motion.div
-            className="absolute inset-0 bg-black/30"
-            initial={{ opacity: 0 }}
+            className="absolute inset-0 bg-[color-mix(in_srgb,var(--ink)_40%,transparent)]"
+            initial={reduceMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            exit={reduceMotion ? undefined : { opacity: 0 }}
+            transition={{ duration: reduceMotion ? 0 : 0.15 }}
             onClick={onClose}
             aria-hidden="true"
           />
@@ -37,11 +38,11 @@ export function MobileDrawer({ open, onClose, children }: MobileDrawerProps) {
             role="dialog"
             aria-modal="true"
             aria-label="Sidebar"
-            className="glass absolute inset-y-0 left-0 w-[min(20rem,85vw)] rounded-r-[28px] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
-            initial={{ x: "-100%" }}
+            className="absolute inset-y-0 left-0 w-[min(18rem,85vw)] min-w-0 overflow-hidden border-r border-ink bg-paper pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
+            initial={reduceMotion ? false : { x: "-100%" }}
             animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+            exit={reduceMotion ? undefined : { x: "-100%" }}
+            transition={{ duration: reduceMotion ? 0 : 0.15, ease: [0.2, 0.7, 0.2, 1] }}
           >
             {children}
           </motion.aside>
